@@ -766,19 +766,19 @@ LteHelper::HandoverRequest (Time hoTime, Ptr<NetDevice> ueDev, Ptr<NetDevice> so
 }
 
 void
-LteHelper::S1HandoverRequest (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb)
+LteHelper::HandoverRequestWithAnchorRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb)
 {
   NS_LOG_FUNCTION (this << ue);
   NS_ASSERT_MSG (m_epcHelper, "Handover requires the use of the EPC - did you forget to call LteHelper::SetEpcHelper () ?");
-  Simulator::Schedule (hoTime, &LteHelper::DoS1HandoverRequest, this, ue, pgwAddress, sourceEnb, targetEnb);
+  Simulator::Schedule (hoTime, &LteHelper::DoHandoverRequestWithAnchorRelocation, this, ue, pgwAddress, sourceEnb, targetEnb);
 }
 
 void
-LteHelper::S1HandoverRequestMmeRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb)
+LteHelper::HandoverRequestWithAnchorAndMmeRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb)
 {
   NS_LOG_FUNCTION (this << ue);
   NS_ASSERT_MSG (m_epcHelper, "Handover requires the use of the EPC - did you forget to call LteHelper::SetEpcHelper () ?");
-  Simulator::Schedule (hoTime, &LteHelper::DoS1HandoverRequestMmeRelocation, this, ue, pgwAddress, sourceEnb, targetEnb);
+  Simulator::Schedule (hoTime, &LteHelper::DoHandoverRequestWithAnchorAndMmeRelocation, this, ue, pgwAddress, sourceEnb, targetEnb);
 }
 
 void
@@ -819,15 +819,13 @@ LteHelper::DoHandoverRequest (Ptr<NetDevice> ueDev, Ptr<NetDevice> sourceEnbDev,
 }
 
 void
-LteHelper::DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress,
+LteHelper::DoHandoverRequestWithAnchorRelocation (Ptr<Node> ue, Ipv4Address pgwAddress,
                                 Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
-  NS_LOG_FUNCTION (this << ue);
-  NS_LOG_UNCOND("handoverrrrrrrrrrrrrrrr");
+  NS_LOG_FUNCTION (this << ue)
 
   Ipv4Address ueOldAddress = ue->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal ();
 
-  NS_LOG_UNCOND("ue old address " << ueOldAddress);
 
   Ptr<NetDevice> ueDev = ue->GetDevice(0);
   Ptr<LteUeNetDevice> lteUeDev = ueDev->GetObject<LteUeNetDevice>();
@@ -844,7 +842,6 @@ LteHelper::DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress,
   UpdateArp(m_epcHelper->Attach (ueDev), m_epcHelper->m_mac);
 
   Ipv4Address locatorAddress = ue->GetObject<Ipv4>()->GetAddress(1,1).GetLocal();
-  NS_LOG_UNCOND("locator address " << locatorAddress);
 
   /* create a dummy packet */
   Ptr<Packet> p = Create<Packet> ();
@@ -860,15 +857,12 @@ LteHelper::DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress,
 }
 
 void
-LteHelper::DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddress,
+LteHelper::DoHandoverRequestWithAnchorAndMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddress,
                                              Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
   NS_LOG_FUNCTION (this << ue);
-  NS_LOG_UNCOND("handover with MME relocation");
 
   Ipv4Address ueOldAddress = ue->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal ();
-
-  NS_LOG_UNCOND("ue old address " << ueOldAddress);
 
   Ptr<NetDevice> ueDev = ue->GetDevice(0);
   Ptr<LteUeNetDevice> lteUeDev = ueDev->GetObject<LteUeNetDevice>();
@@ -885,7 +879,6 @@ LteHelper::DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddre
   UpdateArp(m_epcHelper->Attach (ueDev), m_epcHelper->m_mac);
 
   Ipv4Address locatorAddress = ue->GetObject<Ipv4>()->GetAddress(1,1).GetLocal();
-  NS_LOG_UNCOND("locator address " << locatorAddress);
 
   /* create a dummy packet */
   Ptr<Packet> p = Create<Packet> ();

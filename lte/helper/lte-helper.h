@@ -268,9 +268,9 @@ public:
    * \param ue the UE that hands off
    * \param ueCopy copy of the original UE in the new EPC
    */
-  void S1HandoverRequest (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress,
+  void HandoverRequestWithAnchorRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress,
                           Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
-  void S1HandoverRequestMmeRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress,
+  void HandoverRequestWithAnchorAndMmeRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress,
                                        Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
 
 
@@ -429,8 +429,8 @@ private:
   Ptr<NetDevice> InstallSingleUeDevice (Ptr<Node> n);
 
   void DoHandoverRequest (Ptr<NetDevice> ueDev, Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev);
-  void DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
-  void DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddress, Ptr<NetDevice> sourceEnb,
+  void DoHandoverRequestWithAnchorRelocation (Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb);
+  void DoHandoverRequestWithAnchorAndMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddress, Ptr<NetDevice> sourceEnb,
                                          Ptr<NetDevice> targetEnb);
 
   void ReceiveFromMme (Ptr<Socket> sock);
