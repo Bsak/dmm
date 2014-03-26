@@ -31,7 +31,7 @@
 #include <ns3/epc-tft.h>
 #include <ns3/eps-bearer.h>
 #include <ns3/virtual-net-device.h>
-#include <ns3/internet-module.h>
+#include "ns3/openflow-module.h"
 
 namespace ns3 {
 
@@ -102,6 +102,10 @@ public:
    */
   void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
 
+  void InitOpenFlow(NetDeviceContainer ofDevs, Ptr<ns3::ofi::LearningController> controller);
+  //void InitFlowTable(Ipv4Address ipAddr, Mac48Address addr);
+  void UpdateFlowTable(Ipv4Address ipAddr, Mac48Address addr);
+
   /**
    * Activate an EPS bearer, setting up the corresponding S1-U tunnel.
    *
@@ -153,6 +157,8 @@ public:
   void SetContainer(const NodeContainer &c);
 
   uint16_t GetLastRnti(void);
+
+  Ptr<ns3::ofi::LearningController> m_controller;
 
   Mac48Address m_mac;
 
@@ -209,6 +215,7 @@ private:
   uint16_t m_current;
   uint16_t m_count;
   NodeContainer m_ues;
+  NetDeviceContainer m_ofDevs;
 };
 
 
