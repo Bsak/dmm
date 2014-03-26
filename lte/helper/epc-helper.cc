@@ -532,4 +532,328 @@ EpcHelper::GetLastRnti()
     return m_current;
 }
 
+/************************ FLOW TABLE MANAGEMENT **************************/
+void
+EpcHelper::InitOpenFlow(NetDeviceContainer ofDevs, Ptr<ns3::ofi::LearningController> controller) {
+    m_ofDevs.Add(ofDevs);
+    m_controller = controller;
+}
+
+/*void
+EpcHelper::InitFlowTable(Ipv4Address ipAddr, Mac48Address addr){
+    NS_LOG_FUNCTION (this << ipAddr << addr);
+    if(ipAddr.IsBroadcast() && addr.IsBroadcast())
+        return;
+    UpdateFlowTable(ipAddr, addr);
+}*/
+
+void
+EpcHelper::UpdateFlowTable(Ipv4Address ipAddr, Mac48Address addr){
+  NS_LOG_FUNCTION (this << ipAddr << addr);
+  uint8_t buf[4];
+  ipAddr.Serialize(buf);
+  if(buf[0]==90){ //remoteHost
+    if(buf[1]==1){
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 4);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 3);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 5);
+    }
+    else if(buf[1]==2){
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 5);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 5);
+    }
+    else if(buf[1]==3){
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 5);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 5);
+    }
+  }
+  else if(buf[0]==10){
+    if(buf[1]==0){ //sourcePgw pool
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 8);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 5);
+    }
+    else if(buf[1]==10){ //targetPgw pool
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 6);
+    }
+    /*
+    else if(buf[1]==4){ //sourceEnb
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 4);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+
+    }
+    else if(buf[1]==5){ //targetEnb
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 3);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+    }
+  }
+  else if(buf[0]==70){ //controller
+    if(controllerPos==0){ //middle of backbone
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 3);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+    }
+    else if(controllerPos==1){ //sgiAR1
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 7);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+    }
+    else if(controllerPos==2){ //sgiAR2
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 3);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 4);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+    }
+  }
+  else if(buf[0]==192){
+    if(buf[3]==1){ //234
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+    }
+    else if(buf[3]==2){ //235
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+
+    }
+    else if(buf[3]==4){ //236
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+
+    }
+    else if(buf[3]==6){ //237
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+
+    }
+    else if(buf[3]==12){ //310
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 3);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+
+    }
+    else if(buf[3]==14){ //238
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+
+    }
+    else if(buf[3]==18){ //312
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 3);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+    }
+    else if(buf[3]==21){ //79
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 4);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+    }
+    else if(buf[3]==23){ //120
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 3);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+    }
+    else if(buf[3]==24){ //231
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 3);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+    }
+    else if(buf[3]==28){ //258
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 3);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+    }
+    else if(buf[3]==30){ //134
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 3);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(12)), addr, 0);
+    }
+    else if(buf[3]==32){ //218
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(0)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(1)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(2)), addr, 2);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(3)), addr, 4);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(4)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(5)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(6)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(7)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(8)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(9)), addr, 1);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(10)), addr, 0);
+        m_controller->InitFlows(DynamicCast<OpenFlowSwitchNetDevice>(m_ofDevs.Get(11)), addr, 0);
+    }*/
+  }
+}
+
 } // namespace ns3
