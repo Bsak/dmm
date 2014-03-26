@@ -33,6 +33,8 @@
 #include "ns3/data-rate.h"
 #include "ns3/ptr.h"
 #include "ns3/mac48-address.h"
+#include "ns3/ipv4.h"
+#include "ns3/ipv4-header.h"
 
 namespace ns3 {
 
