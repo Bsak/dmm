@@ -183,6 +183,7 @@ public:
    * \return Returns true unless the source was detached before it
    * completed its transmission.
    */
+  bool TransmitEnd (void);
   bool TransmitEnd (uint32_t srcId);
 
   /**
