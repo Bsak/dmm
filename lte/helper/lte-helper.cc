@@ -52,13 +52,13 @@
 #include <ns3/epc-helper.h>
 #include <ns3/mobility-helper.h>
 #include <ns3/internet-stack-helper.h>
-#include <ns3/ue.h>
-#include <ns3/enb.h>
 #include <iostream>
 #include <ns3/buildings-propagation-loss-model.h>
 #include <ns3/lte-spectrum-value-helper.h>
 #include <ns3/epc-x2.h>
 #include <ns3/seq-ts-header.h>
+#include <ns3/global-router-interface.h>
+#include <ns3/applications-module.h>
 
 NS_LOG_COMPONENT_DEFINE ("LteHelper");
 
@@ -766,19 +766,19 @@ LteHelper::HandoverRequest (Time hoTime, Ptr<NetDevice> ueDev, Ptr<NetDevice> so
 }
 
 void
-LteHelper::HandoverRequestWithAnchorRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb)
+LteHelper::S1HandoverRequest (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb)
 {
   NS_LOG_FUNCTION (this << ue);
   NS_ASSERT_MSG (m_epcHelper, "Handover requires the use of the EPC - did you forget to call LteHelper::SetEpcHelper () ?");
-  Simulator::Schedule (hoTime, &LteHelper::DoHandoverRequestWithAnchorRelocation, this, ue, pgwAddress, sourceEnb, targetEnb);
+  Simulator::Schedule (hoTime, &LteHelper::DoS1HandoverRequest, this, ue, pgwAddress, sourceEnb, targetEnb);
 }
 
 void
-LteHelper::HandoverRequestWithAnchorAndMmeRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb)
+LteHelper::S1HandoverRequestMmeRelocation (Time hoTime, Ptr<Node> ue, Ipv4Address pgwAddress, Ptr<NetDevice> sourceEnb, Ptr<NetDevice> targetEnb)
 {
   NS_LOG_FUNCTION (this << ue);
   NS_ASSERT_MSG (m_epcHelper, "Handover requires the use of the EPC - did you forget to call LteHelper::SetEpcHelper () ?");
-  Simulator::Schedule (hoTime, &LteHelper::DoHandoverRequestWithAnchorAndMmeRelocation, this, ue, pgwAddress, sourceEnb, targetEnb);
+  Simulator::Schedule (hoTime, &LteHelper::DoS1HandoverRequestMmeRelocation, this, ue, pgwAddress, sourceEnb, targetEnb);
 }
 
 void
@@ -806,7 +806,6 @@ LteHelper::UpdateArp(Ipv4Address ipAddr, Mac48Address addr)
     }
 }
 
-
 void
 LteHelper::DoHandoverRequest (Ptr<NetDevice> ueDev, Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
@@ -819,13 +818,13 @@ LteHelper::DoHandoverRequest (Ptr<NetDevice> ueDev, Ptr<NetDevice> sourceEnbDev,
 }
 
 void
-LteHelper::DoHandoverRequestWithAnchorRelocation (Ptr<Node> ue, Ipv4Address pgwAddress,
+LteHelper::DoS1HandoverRequest (Ptr<Node> ue, Ipv4Address pgwAddress,
                                 Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
-  NS_LOG_FUNCTION (this << ue)
+  NS_LOG_FUNCTION (this << ue);
+  NS_LOG_UNCOND("handoverrrrrrrrrrrrrrrr");
 
-  Ipv4Address ueOldAddress = ue->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal ();
-
+  Ipv4Address identifierAddress = ue->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal ();
 
   Ptr<NetDevice> ueDev = ue->GetDevice(0);
   Ptr<LteUeNetDevice> lteUeDev = ueDev->GetObject<LteUeNetDevice>();
@@ -837,16 +836,16 @@ LteHelper::DoHandoverRequestWithAnchorRelocation (Ptr<Node> ue, Ipv4Address pgwA
   uint16_t rnti = ueDev->GetObject<LteUeNetDevice> ()->GetRrc ()->GetRnti ();
   sourceRrc->SendHandoverRequest (rnti, targetCellId);
 
-  m_epcHelper->ModifyBearer (lteUeDev->GetImsi(), ueOldAddress, EpcTft::Default(), EpsBearer (EpsBearer::NGBR_VIDEO_TCP_DEFAULT));
+  m_epcHelper->ModifyBearer (lteUeDev->GetImsi(), identifierAddress, EpcTft::Default(), EpsBearer (EpsBearer::NGBR_VIDEO_TCP_DEFAULT));
 
-  UpdateArp(m_epcHelper->Attach (ueDev), m_epcHelper->m_mac);
+  UpdateArp(m_epcHelper->Attach(ueDev), m_epcHelper->m_mac);
 
-  Ipv4Address locatorAddress = ue->GetObject<Ipv4>()->GetAddress(1,1).GetLocal();
+  Ipv4Address locatorAddress = ue->GetObject<Ipv4> ()->GetAddress(1,1).GetLocal ();
 
   /* create a dummy packet */
   Ptr<Packet> p = Create<Packet> ();
   Ipv4Header ipHeader;
-  ipHeader.SetSource(ueOldAddress);
+  ipHeader.SetSource(identifierAddress);
   ipHeader.SetDestination(locatorAddress);
   p->AddHeader(ipHeader);
   Ipv4Header pgwIpHeader;
@@ -857,12 +856,15 @@ LteHelper::DoHandoverRequestWithAnchorRelocation (Ptr<Node> ue, Ipv4Address pgwA
 }
 
 void
-LteHelper::DoHandoverRequestWithAnchorAndMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddress,
+LteHelper::DoS1HandoverRequestMmeRelocation (Ptr<Node> ue, Ipv4Address tPgwAddress,
                                              Ptr<NetDevice> sourceEnbDev, Ptr<NetDevice> targetEnbDev)
 {
   NS_LOG_FUNCTION (this << ue);
+  NS_LOG_UNCOND("handover with MME relocation");
 
-  Ipv4Address ueOldAddress = ue->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal ();
+  Ipv4Address identifierAddress = ue->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal ();
+
+  NS_LOG_UNCOND(identifierAddress);
 
   Ptr<NetDevice> ueDev = ue->GetDevice(0);
   Ptr<LteUeNetDevice> lteUeDev = ueDev->GetObject<LteUeNetDevice>();
@@ -874,16 +876,18 @@ LteHelper::DoHandoverRequestWithAnchorAndMmeRelocation (Ptr<Node> ue, Ipv4Addres
   uint16_t rnti = ueDev->GetObject<LteUeNetDevice> ()->GetRrc ()->GetRnti ();
   sourceRrc->SendHandoverRequest (rnti, targetCellId);
 
-  m_epcHelper->ModifyBearer (lteUeDev->GetImsi(), ueOldAddress, EpcTft::Default(), EpsBearer (EpsBearer::NGBR_VIDEO_TCP_DEFAULT));
+  m_epcHelper->ModifyBearer (lteUeDev->GetImsi(), identifierAddress, EpcTft::Default(), EpsBearer (EpsBearer::NGBR_VIDEO_TCP_DEFAULT));
 
-  UpdateArp(m_epcHelper->Attach (ueDev), m_epcHelper->m_mac);
+  UpdateArp(m_epcHelper->Attach(ueDev), m_epcHelper->m_mac);
 
-  Ipv4Address locatorAddress = ue->GetObject<Ipv4>()->GetAddress(1,1).GetLocal();
+  Ipv4Address locatorAddress = ue->GetObject<Ipv4> ()->GetAddress(1,1).GetLocal ();
+
+  NS_LOG_UNCOND(locatorAddress);
 
   /* create a dummy packet */
   Ptr<Packet> p = Create<Packet> ();
   Ipv4Header ipHeader;
-  ipHeader.SetSource(ueOldAddress);
+  ipHeader.SetSource(identifierAddress);
   ipHeader.SetDestination(locatorAddress);
   p->AddHeader(ipHeader);
   Ipv4Header pgwIpHeader;
@@ -902,18 +906,25 @@ LteHelper::ReceiveFromMme(Ptr<Socket> sock)
     p->RemoveHeader(pgwIpHeader);
     m_signalingBytes = m_signalingBytes + MAKE_PATH_SIZE;
 
-    SeqTsHeader seqTs;
-    p->AddHeader(seqTs);
+    Ipv4Header oldHeader, newHeader;
+    p->PeekHeader(oldHeader);
+    Ipv4Address identifier = oldHeader.GetSource();
+    Ipv4Address locator = oldHeader.GetDestination();
 
     for(uint16_t h=0; h<m_controllerSocketVectorIn.size(); h++){
         m_controllerSocketVectorIn[h]->Send(p);
-        m_signalingBytes = m_signalingBytes + RULE_UPDATE_SIZE;
+        m_epcHelper->m_controller->CreateNwSetFieldAction(m_ingress[h], identifier, locator);
+        m_signalingBytes = m_signalingBytes + OFP_MODIFY_STATE_SIZE;
     }
 
+    p->RemoveHeader(oldHeader);
+    newHeader.SetSource(locator);
+    newHeader.SetDestination(identifier);
+    p->AddHeader(newHeader);
     m_controllerSocketMapEg[pgwIpHeader.GetSource()]->Send(p);
-    m_signalingBytes = m_signalingBytes + RULE_UPDATE_SIZE;
-
-    p->RemoveHeader(seqTs);
+    Ptr<Node> egr = m_egress[pgwIpHeader.GetSource()];
+    m_epcHelper->m_controller->CreateNwSetFieldAction(egr, locator, identifier);
+    m_signalingBytes = m_signalingBytes + OFP_MODIFY_STATE_SIZE;
 }
 
 void
@@ -1516,32 +1527,33 @@ LteHelper::CreateController (Ptr<Node> controller)
 }
 
 void
-LteHelper::ConnectSocketsIngress (Ptr<Node> natNode, Ipv4Address ingressNatAddress, Ptr<Ipv4Nat> nat)
+LteHelper::ConnectSocketsIngress (Ptr<Node> ofNode, Ipv4Address ofNodeAddress)
 {
     NS_LOG_FUNCTION (this);
-    Ptr<Socket> natSocket = Socket::CreateSocket(natNode, TypeId::LookupByName("ns3::UdpSocketFactory"));
-    InetSocketAddress remote = InetSocketAddress(ingressNatAddress, 7000);
-    int retval = natSocket->Bind(remote);
+    Ptr<Socket> ofSocket = Socket::CreateSocket(ofNode, TypeId::LookupByName("ns3::UdpSocketFactory"));
+    InetSocketAddress remote = InetSocketAddress(ofNodeAddress, 7000);
+    int retval = ofSocket->Bind(remote);
     NS_ASSERT(retval == 0);
-    natSocket->SetRecvCallback (MakeCallback (&Ipv4Nat::ReceivePacketIn, nat));
+    ofSocket->SetRecvCallback (MakeCallback (&Ipv4::AddAddrToList, ofNode->GetObject<Ipv4>()));
     Ptr<Socket> cs = Socket::CreateSocket(m_controller, TypeId::LookupByName ("ns3::UdpSocketFactory"));
     cs->Connect(remote);
     m_controllerSocketVectorIn.push_back(cs);
+    m_ingress.push_back(ofNode);
 }
 
 void
-LteHelper::ConnectSocketsEgress (Ptr<Node> natNode, Ipv4Address egressNatAddress, Ptr<Ipv4Nat> nat, Ipv4Address pgwAddress)
+LteHelper::ConnectSocketsEgress (Ptr<Node> ofNode, Ipv4Address egressAddress, Ipv4Address pgwAddress)
 {
     NS_LOG_FUNCTION (this);
-    //Ipv4Address pgwAddress = natNode->GetObject<Ipv4>()->GetAddress(1,0).GetLocal();
-    Ptr<Socket> natSocket = Socket::CreateSocket(natNode, TypeId::LookupByName("ns3::UdpSocketFactory"));
-    InetSocketAddress remote = InetSocketAddress(egressNatAddress, 7000);
-    int retval = natSocket->Bind(remote);
+    Ptr<Socket> ofSocket = Socket::CreateSocket(ofNode, TypeId::LookupByName("ns3::UdpSocketFactory"));
+    InetSocketAddress remote = InetSocketAddress(egressAddress, 7000);
+    int retval = ofSocket->Bind(remote);
     NS_ASSERT(retval == 0);
-    natSocket->SetRecvCallback (MakeCallback (&Ipv4Nat::ReceivePacketEg, nat));
+    ofSocket->SetRecvCallback (MakeCallback (&Ipv4::AddAddrToList, ofNode->GetObject<Ipv4>()));
     Ptr<Socket> cs = Socket::CreateSocket(m_controller, TypeId::LookupByName ("ns3::UdpSocketFactory"));
     cs->Connect(remote);
     m_controllerSocketMapEg[pgwAddress] = cs;
+    m_egress[pgwAddress] = ofNode;
 }
 
 void
@@ -1552,7 +1564,7 @@ LteHelper::AttachMme(Ptr<Node> mme, Ipv4Address pgwAddress)
     InetSocketAddress controllerAddress = InetSocketAddress(m_controller->GetObject<Ipv4>()->GetAddress(1,0).GetLocal(), m_mmePort++);
     int retval = controllerSocket->Bind(controllerAddress);
     NS_ASSERT(retval == 0);
-    controllerSocket->SetRecvCallback (MakeCallback (&LteHelper::ReceiveFromMme, this));
+    controllerSocket->SetRecvCallback (MakeCallback (&LteHelper::ReceiveFromMme, this));//FIXME
     Ptr<Socket> mmeSock = Socket::CreateSocket(mme, TypeId::LookupByName ("ns3::UdpSocketFactory"));
     mmeSock->Connect(controllerAddress);
     m_mmeMap[pgwAddress] = mmeSock;
