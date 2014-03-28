@@ -4,7 +4,7 @@ dmm
 LTE's Distributed Mobility Management solutions implementation in NS3
 
 
-unfortunately due to some modifications to ns-3 source code, my modifications were causing some bugs which I have fixed now.
+Unfortunately due to some modifications to ns-3 source code, my modifications were causing some bugs which I have fixed now.
 
 In the dmm repository you can find two scripts. The first one "script_17.sh" is to be used if you are using ns-3.17, while the second one "script_18-19.sh" is to be used if you are using either ns-3.18 or ns-3.19.
 Both scripts provide an easy one-click installation of your ns-3 project with both openflow switch support implementation and dmm code modifications included.
