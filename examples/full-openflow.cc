@@ -295,8 +295,6 @@ main (int argc, char *argv[])
 
   // Tracing
   Config::SetDefault("ns3::LteEnbRrc::Version", StringValue(version));
-  Config::SetDefault("ns3::GeneralUdpServer::Version", StringValue(version));
-  Config::SetDefault("ns3::GeneralUdpClient::Version", StringValue(version));
   Config::SetDefault("ns3::RadioBearerStatsCalculator::UlRlcOutputFilename", StringValue (version+"_Ul.txt"));
   Config::SetDefault("ns3::RadioBearerStatsCalculator::DlRlcOutputFilename", StringValue (version+"_Dl.txt"));
 
